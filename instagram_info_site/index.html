@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instagram Glowing Scraper</title>
+<style>
+body { font-family: Arial,sans-serif; background:#111; color:#fff; text-align:center; padding:40px; }
+h1 { color:#00ff73; text-shadow:0 0 10px #00ff73,0 0 20px #00ff73,0 0 30px #00ff73; animation:glow 1.5s ease-in-out infinite alternate; }
+@keyframes glow { from{text-shadow:0 0 5px #00ff73,0 0 10px #00ff73;} to{text-shadow:0 0 20px #00ff73,0 0 40px #00ff73,0 0 60px #00ff73;} }
+.box { background: rgba(25,25,25,0.85); padding:30px; border-radius:20px; box-shadow:0 0 25px #00ff73; width:100%; max-width:450px; margin:20px auto; text-align:center; }
+input { width:90%; padding:14px; border-radius:10px; border:none; margin-bottom:12px; background:#111; color:white; font-size:16px; box-shadow:0 0 10px #00ff73 inset; }
+button { padding:14px 30px; border:none; border-radius:10px; font-weight:bold; font-size:16px; color:black; background:#00ff73; cursor:pointer; transition:0.3s; box-shadow:0 0 10px #00ff73; }
+button:hover { transform:scale(1.05); box-shadow:0 0 25px #00ff73; }
+.result { margin-top:25px; background: rgba(0,0,0,0.6); padding:25px; border-radius:16px; box-shadow:0 0 20px #00ff73; display:none; }
+img { border-radius:50%; width:140px; height:140px; box-shadow:0 0 20px #00ff73; margin-bottom:15px; }
+#loader { display:none; margin:20px auto; }
+.spinner { border:6px solid #333; border-top:6px solid #00ff73; border-radius:50%; width:50px; height:50px; animation:spin 1s linear infinite; margin:auto; }
+@keyframes spin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+</style>
+</head>
+<body>
+<h1>Instagram Glowing Scraper</h1>
+<div class="box">
+<input type="text" id="username" placeholder="Enter Instagram Username">
+<button onclick="getData()">Get Info</button>
+</div>
+<div id="loader"><div class="spinner"></div></div>
+<div id="output" class="result"></div>
+
+<script>
+async function getData() {
+    const user = document.getElementById("username").value.trim();
+    if(!user){ alert("Enter username!"); return; }
+
+    document.getElementById("loader").style.display="block";
+    document.getElementById("output").style.display="none";
+    document.getElementById("output").innerHTML="";
+
+    try {
+        const res = await fetch(`/api?mode=fetch&u=${user}`);
+        const data = await res.json();
+        document.getElementById("loader").style.display="none";
+
+        if(data.error){
+            document.getElementById("output").innerHTML = `<p>${data.error}</p>`;
+            document.getElementById("output").style.display="block";
+            return;
+        }
+
+        let postsHTML = "";
+        if(data.RecentPosts && data.RecentPosts.length>0){
+            data.RecentPosts.forEach(post => {
+                postsHTML += `<img src="${post.display_url}" width="100"> `;
+            });
+        }
+
+        document.getElementById("output").innerHTML = `
+            <img src="${data["Profile Pic"]}" />
+            <h2>@${data["Username"]}</h2>
+            <p><b>Name:</b> ${data["Full Name"]}</p>
+            <p><b>Bio:</b> ${data["Bio"]}</p>
+            <p><b>Followers:</b> ${data["Followers"]}</p>
+            <p><b>Following:</b> ${data["Following"]}</p>
+            <p><b>Posts:</b> ${data["Posts"]}</p>
+            <h3>Recent Posts</h3>
+            ${postsHTML}
+        `;
+        document.getElementById("output").style.display="block";
+
+    } catch(e){
+        document.getElementById("loader").style.display="none";
+        document.getElementById("output").style.display="block";
+        document.getElementById("output").innerHTML = "<p>Error fetching data.</p>";
+    }
+}
+</script>
+</body>
+</html>
